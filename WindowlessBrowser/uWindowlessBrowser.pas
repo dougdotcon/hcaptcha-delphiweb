@@ -1,6 +1,6 @@
 unit uWindowlessBrowser;
 
-{$I ..\..\..\source\webview2.inc}
+{$I webview2.inc}
 
 interface
 
@@ -469,7 +469,7 @@ begin
 var Script:String :=
     '(function() {' + sLineBreak +
     '  var iframe = document.querySelector(''iframe[src*="hcaptcha.com"]'');' + sLineBreak +
-    '  var container = iframe ? iframe.parentElement : document.querySelector(''[title="Widget contendo caixa de seleção para desafio de segurança hCaptcha"]'');' + sLineBreak +
+    '  var container = iframe ? iframe.parentElement : document.querySelector(''[title="Widget contendo caixa de seleï¿½ï¿½o para desafio de seguranï¿½a hCaptcha"]'');' + sLineBreak +
     '  if (container) {' + sLineBreak +
     '    var styles = {' + sLineBreak +
     '      position: "fixed",' + sLineBreak +
@@ -518,7 +518,7 @@ begin
   var JavaScriptCode: string :=
     'var iframes = document.getElementsByTagName("iframe");' + sLineBreak +
     'if (iframes.length === 0) {' + sLineBreak +
-    '    console.log("Nenhum iframe encontrado na página.");' + sLineBreak +
+    '    console.log("Nenhum iframe encontrado na pï¿½gina.");' + sLineBreak +
     '} else {' + sLineBreak +
     '    Array.from(iframes).forEach(function(iframe) {' + sLineBreak +
     '        try {' + sLineBreak +
@@ -526,24 +526,24 @@ begin
     '                console.log("Iframe encontrado com src contendo ''hcaptcha'':", iframe.src);' + sLineBreak +
     '                var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;' + sLineBreak +
     '                if (iframeDocument) {' + sLineBreak +
-    '                    console.log("Conteúdo do iframe acessado:", iframe.src);' + sLineBreak +
+    '                    console.log("Conteï¿½do do iframe acessado:", iframe.src);' + sLineBreak +
     '                    var checkbox = iframeDocument.getElementById("checkbox");' + sLineBreak +
     '                    if (checkbox && !checkbox.checked) {' + sLineBreak +
     '                        console.log("Checkbox encontrado. Clicando...");' + sLineBreak +
     '                        checkbox.click();' + sLineBreak +
     '                    } else if (checkbox) {' + sLineBreak +
-    '                        console.log("Checkbox já está marcado no iframe:", iframe.src);' + sLineBreak +
+    '                        console.log("Checkbox jï¿½ estï¿½ marcado no iframe:", iframe.src);' + sLineBreak +
     '                    } else {' + sLineBreak +
-    '                        console.log("Checkbox com id=''checkbox'' não encontrado no iframe:", iframe.src);' + sLineBreak +
+    '                        console.log("Checkbox com id=''checkbox'' nï¿½o encontrado no iframe:", iframe.src);' + sLineBreak +
     '                    }' + sLineBreak +
     '                } else {' + sLineBreak +
-    '                    console.log("Conteúdo do iframe ainda não acessível:", iframe.src);' + sLineBreak +
+    '                    console.log("Conteï¿½do do iframe ainda nï¿½o acessï¿½vel:", iframe.src);' + sLineBreak +
     '                }' + sLineBreak +
     '            } else {' + sLineBreak +
-    '                console.log("Iframe ignorado, pois o src não contém ''hcaptcha'':", iframe.src);' + sLineBreak +
+    '                console.log("Iframe ignorado, pois o src nï¿½o contï¿½m ''hcaptcha'':", iframe.src);' + sLineBreak +
     '            }' + sLineBreak +
     '        } catch (e) {' + sLineBreak +
-    '            console.error("Erro ao acessar conteúdo do iframe:", e);' + sLineBreak +
+    '            console.error("Erro ao acessar conteï¿½do do iframe:", e);' + sLineBreak +
     '        }' + sLineBreak +
     '    });' + sLineBreak +
     '}';
@@ -568,7 +568,7 @@ begin
   if WVBrowser1.Source <> 'https://smartapi.tech/token/click.php' then
    begin
      WVBrowser1.Navigate('https://smartapi.tech/token/click.php');
-     ShowMessage('Alterando a página para teste de click');
+     ShowMessage('Alterando a pï¿½gina para teste de click');
      exit;
    end;
 
@@ -581,7 +581,7 @@ begin
   if WVBrowser1.Source <> 'https://smartapi.tech/token/mousemov.php' then
    begin
      WVBrowser1.Navigate('https://smartapi.tech/token/mousemov.php');
-     ShowMessage('Alterando a página para teste de movimento');
+     ShowMessage('Alterando a pï¿½gina para teste de movimento');
      exit;
    end;
 

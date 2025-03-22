@@ -2,7 +2,7 @@ program CaptchaSolver;
 
 uses
   Vcl.Forms,
-  uMainForm in 'src\forms\uMainForm.pas' {MainForm},
+  uWindowlessBrowser in 'WindowlessBrowser\uWindowlessBrowser.pas' {MainForm},
   uCaptchaSonicClient in 'src\api\uCaptchaSonicClient.pas',
   uCaptchaTypes in 'src\types\uCaptchaTypes.pas',
   uHCaptchaAutomation in 'src\automation\uHCaptchaAutomation.pas',
