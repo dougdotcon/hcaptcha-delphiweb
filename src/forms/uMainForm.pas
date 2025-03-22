@@ -7,8 +7,10 @@ uses
   System.SysUtils, System.Variants, System.Classes, System.JSON,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.ComCtrls,
+  uWVBrowser, uWVWinControl, uWVWindowParent, uWVTypes, uWVConstants,
+  uWVTypeLibrary, uWVLibFunctions, uWVLoader, uWVInterfaces,
   uCaptchaTypes, uCaptchaSonicClient, uHCaptchaAutomation,
-  uImageProcessor, uLogger, uConfig, uDirectCompositionHost;
+  uImageProcessor, uLogger, uConfig;
 
 type
   TMainForm = class(TForm)
@@ -18,16 +20,17 @@ type
     lblURL: TLabel;
     edtURL: TEdit;
     btnStart: TButton;
-    btnStop: TButton;
     mmLog: TMemo;
     StatusBar: TStatusBar;
+    WVBrowser1: TWVBrowser;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
-    procedure btnStopClick(Sender: TObject);
+    procedure WVBrowser1AfterCreated(Sender: TObject);
+    procedure WVBrowser1DocumentTitleChanged(Sender: TObject);
+    procedure WVBrowser1WebMessageReceived(Sender: TObject; const aWebView: ICoreWebView2; const aArgs: ICoreWebView2WebMessageReceivedEventArgs);
   private
     FConfig: TConfig;
-    FWebView: TDirectCompositionHost;
     FCaptchaSonic: TCaptchaSonicClient;
     FImageProcessor: TImageProcessor;
     FAutomation: THCaptchaAutomation;
@@ -37,8 +40,6 @@ type
     procedure InitializeComponents;
     procedure UpdateStatus(const Status: string);
     procedure LogMessage(const Msg: string);
-    procedure HandleNavigationCompleted(Sender: TObject; IsSuccess: Boolean);
-    procedure HandleScriptCompleted(Sender: TObject; const Result: string);
     function ExtractWebsiteKey(const JsonStr: string): string;
   public
     { Public declarations }
@@ -60,6 +61,11 @@ begin
   
   InitializeComponents;
   UpdateStatus('Ready');
+
+  if GlobalWebView2Loader.InitializationError then
+    ShowMessage(GlobalWebView2Loader.ErrorMessage)
+  else
+    WVBrowser1.CreateBrowser(pnlMain.Handle);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -67,7 +73,6 @@ begin
   FAutomation.Free;
   FImageProcessor.Free;
   FCaptchaSonic.Free;
-  FWebView.Free;
   FConfig.Free;
   
   TLogger.GetInstance.LogInfo('Application terminated');
@@ -76,20 +81,12 @@ end;
 
 procedure TMainForm.InitializeComponents;
 begin
-  // Create WebView
-  FWebView := TDirectCompositionHost.Create(Self);
-  FWebView.Parent := pnlMain;
-  FWebView.Align := alClient;
-  FWebView.OnNavigationCompleted := HandleNavigationCompleted;
-  FWebView.OnScriptCompleted := HandleScriptCompleted;
-  
-  // Create other components
+  // Create components
   FCaptchaSonic := TCaptchaSonicClient.Create(FConfig.CaptchaConfig);
   FImageProcessor := TImageProcessor.Create;
-  FAutomation := THCaptchaAutomation.Create(FConfig.CaptchaConfig, FWebView);
+  FAutomation := THCaptchaAutomation.Create(FConfig.CaptchaConfig, WVBrowser1);
   
   // Initialize UI
-  btnStop.Enabled := False;
   FRunning := False;
   FCurrentWebsiteKey := '';
 end;
@@ -126,89 +123,48 @@ begin
   end;
 end;
 
-procedure TMainForm.HandleNavigationCompleted(Sender: TObject; IsSuccess: Boolean);
+procedure TMainForm.WVBrowser1AfterCreated(Sender: TObject);
 begin
-  if not FRunning then
-    Exit;
-    
-  if IsSuccess then
-  begin
-    TLogger.GetInstance.LogInfo('Page loaded successfully');
-    LogMessage('Página carregada, procurando hCaptcha');
-    UpdateStatus('Procurando hCaptcha...');
-    
-    // Execute script to check for hCaptcha
-    FWebView.ExecuteScript(
-      'var hcaptchaFrame = document.querySelector("iframe[src*=''hcaptcha.com'']");' +
-      'if (hcaptchaFrame) {' +
-      '  window.chrome.webview.postMessage(JSON.stringify({' +
-      '    type: "hcaptcha_found",' +
-      '    sitekey: hcaptchaFrame.getAttribute("data-sitekey")' +
-      '  }));' +
-      '} else {' +
-      '  window.chrome.webview.postMessage(JSON.stringify({' +
-      '    type: "hcaptcha_not_found"' +
-      '  }));' +
-      '}');
-  end
-  else
-  begin
-    TLogger.GetInstance.LogError('Failed to load page');
-    LogMessage('Falha ao carregar a página');
-    UpdateStatus('Erro ao carregar página');
-    
-    btnStart.Enabled := True;
-    btnStop.Enabled := False;
-    FRunning := False;
-  end;
+  Caption := 'CaptchaSolver';
+  pnlTop.Enabled := True;
 end;
 
-procedure TMainForm.HandleScriptCompleted(Sender: TObject; const Result: string);
+procedure TMainForm.WVBrowser1DocumentTitleChanged(Sender: TObject);
+begin
+  Caption := 'CaptchaSolver - ' + WVBrowser1.DocumentTitle;
+end;
+
+procedure TMainForm.WVBrowser1WebMessageReceived(Sender: TObject;
+  const aWebView: ICoreWebView2;
+  const aArgs: ICoreWebView2WebMessageReceivedEventArgs);
 var
   WebsiteKey: string;
+  TempArgs: TCoreWebView2WebMessageReceivedEventArgs;
 begin
-  if not FRunning then
-    Exit;
+  TempArgs := TCoreWebView2WebMessageReceivedEventArgs.Create(aArgs);
+  try
+    WebsiteKey := ExtractWebsiteKey(TempArgs.WebMessageAsJson);
     
-  WebsiteKey := ExtractWebsiteKey(Result);
-  
-  if WebsiteKey <> '' then
-  begin
-    FCurrentWebsiteKey := WebsiteKey;
-    TLogger.GetInstance.LogInfo('hCaptcha found with key: ' + WebsiteKey);
-    LogMessage('hCaptcha detectado, iniciando solução');
-    UpdateStatus('Resolvendo captcha...');
-    
-    if FAutomation.Solve(edtURL.Text, WebsiteKey) then
+    if WebsiteKey <> '' then
     begin
-      LogMessage('Captcha resolvido com sucesso');
-      UpdateStatus('Captcha resolvido');
-    end
-    else
-    begin
-      LogMessage('Falha ao resolver captcha: ' + FAutomation.LastError);
-      UpdateStatus('Erro ao resolver captcha');
+      FCurrentWebsiteKey := WebsiteKey;
+      TLogger.GetInstance.LogInfo('hCaptcha found with key: ' + WebsiteKey);
+      LogMessage('hCaptcha detectado, iniciando solução');
+      UpdateStatus('Resolvendo captcha...');
+      
+      if FAutomation.Solve(edtURL.Text, WebsiteKey) then
+      begin
+        LogMessage('Captcha resolvido com sucesso');
+        UpdateStatus('Captcha resolvido');
+      end
+      else
+      begin
+        LogMessage('Falha ao resolver captcha: ' + FAutomation.LastError);
+        UpdateStatus('Erro ao resolver captcha');
+      end;
     end;
-  end
-  else if Result.Contains('"type":"solution_injected"') then
-  begin
-    LogMessage('Solução injetada, aguardando verificação');
-    UpdateStatus('Aguardando verificação...');
-  end
-  else if Result.Contains('"type":"verification_success"') then
-  begin
-    LogMessage('Verificação concluída com sucesso');
-    UpdateStatus('Verificação concluída');
-  end
-  else
-  begin
-    TLogger.GetInstance.LogInfo('No hCaptcha found on page');
-    LogMessage('Nenhum hCaptcha encontrado na página');
-    UpdateStatus('hCaptcha não encontrado');
-    
-    btnStart.Enabled := True;
-    btnStop.Enabled := False;
-    FRunning := False;
+  finally
+    TempArgs.Free;
   end;
 end;
 
@@ -221,26 +177,18 @@ begin
   end;
   
   btnStart.Enabled := False;
-  btnStop.Enabled := True;
   FRunning := True;
   FCurrentWebsiteKey := '';
   
   LogMessage('Iniciando navegação para: ' + edtURL.Text);
   UpdateStatus('Carregando página...');
   
-  FWebView.Navigate(edtURL.Text);
+  WVBrowser1.Navigate(edtURL.Text);
 end;
 
-procedure TMainForm.btnStopClick(Sender: TObject);
-begin
-  FRunning := False;
-  btnStart.Enabled := True;
-  btnStop.Enabled := False;
-  
-  FWebView.Stop;
-  
-  LogMessage('Operação interrompida pelo usuário');
-  UpdateStatus('Operação interrompida');
-end;
+initialization
+  GlobalWebView2Loader := TWVLoader.Create(nil);
+  GlobalWebView2Loader.UserDataFolder := ExtractFileDir(Application.ExeName) + '\Cache';
+  GlobalWebView2Loader.StartWebView2;
 
 end. 
