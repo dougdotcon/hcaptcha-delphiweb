@@ -1,9 +1,9 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'hCaptcha Solver'
-  ClientHeight = 561
-  ClientWidth = 784
+  Caption = 'CaptchaSolver'
+  ClientHeight = 600
+  ClientWidth = 800
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,31 +17,27 @@ object MainForm: TMainForm
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 784
+    Width = 800
     Height = 41
     Align = alTop
-    BevelOuter = bvNone
-    Padding.Left = 8
-    Padding.Top = 8
-    Padding.Right = 8
-    Padding.Bottom = 8
     TabOrder = 0
     object lblURL: TLabel
       Left = 8
       Top = 14
-      Width = 23
+      Width = 22
       Height = 13
       Caption = 'URL:'
     end
     object edtURL: TEdit
-      Left = 37
+      Left = 36
       Top = 11
-      Width = 602
+      Width = 673
       Height = 21
       TabOrder = 0
+      Text = 'https://accounts.hcaptcha.com/demo'
     end
     object btnStart: TButton
-      Left = 645
+      Left = 715
       Top = 9
       Width = 75
       Height = 25
@@ -49,54 +45,49 @@ object MainForm: TMainForm
       TabOrder = 1
       OnClick = btnStartClick
     end
-    object btnStop: TButton
-      Left = 726
-      Top = 9
-      Width = 75
-      Height = 25
-      Caption = 'Parar'
-      TabOrder = 2
-      OnClick = btnStopClick
-    end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 441
-    Width = 784
-    Height = 120
+    Top = 511
+    Width = 800
+    Height = 70
     Align = alBottom
-    BevelOuter = bvNone
-    Padding.Left = 8
-    Padding.Top = 8
-    Padding.Right = 8
-    Padding.Bottom = 8
     TabOrder = 1
     object mmLog: TMemo
-      Left = 8
-      Top = 8
-      Width = 768
-      Height = 85
+      Left = 1
+      Top = 1
+      Width = 798
+      Height = 68
       Align = alClient
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
     end
-    object StatusBar: TStatusBar
-      Left = 8
-      Top = 93
-      Width = 768
-      Height = 19
-      Panels = <>
-      SimplePanel = True
-    end
   end
   object pnlMain: TPanel
     Left = 0
     Top = 41
-    Width = 784
-    Height = 400
+    Width = 800
+    Height = 470
     Align = alClient
-    BevelOuter = bvNone
     TabOrder = 2
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Top = 581
+    Width = 800
+    Height = 19
+    Panels = <>
+    SimplePanel = True
+  end
+  object WVBrowser1: TWVBrowser
+    DefaultURL = 'about:blank'
+    TargetCompatibleBrowserVersion = '95.0.1020.44'
+    AllowSingleSignOnUsingOSPrimaryAccount = False
+    OnAfterCreated = WVBrowser1AfterCreated
+    OnDocumentTitleChanged = WVBrowser1DocumentTitleChanged
+    OnWebMessageReceived = WVBrowser1WebMessageReceived
+    Left = 40
+    Top = 88
   end
 end 
