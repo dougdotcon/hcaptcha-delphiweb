@@ -9,7 +9,9 @@ uses
   uImageProcessor in 'src\utils\uImageProcessor.pas',
   uLogger in 'src\utils\uLogger.pas',
   uConfig in 'src\utils\uConfig.pas',
-  uDirectCompositionHost in 'WindowlessBrowser\uDirectCompositionHost.pas';
+  uDirectCompositionHost in 'WindowlessBrowser\uDirectCompositionHost.pas',
+  WebView2 in 'WebView2.pas',
+  WebView2.Loader in 'WebView2.Loader.pas';
 
 {$R *.res}
 
